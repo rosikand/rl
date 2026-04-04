@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.7.32">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>sd-problems</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for citations */
+div.csl-bib-body { }
+div.csl-entry {
+  clear: both;
+  margin-bottom: 0em;
+}
+.hanging-indent div.csl-entry {
+  margin-left:2em;
+  text-indent:-2em;
+}
+div.csl-left-margin {
+  min-width:2em;
+  float:left;
+}
+div.csl-right-inline {
+  margin-left:2em;
+  padding-left:1em;
+}
+div.csl-indent {
+  margin-left: 2em;
+}</style>
+
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN") {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+<link rel="stylesheet" href="../style.css">
+</head>
+
+<body>
+
+
+
+
+
+<p><a href="../index.html" class="back">← back</a></p>
+<h1 id="what-are-the-problems-with-self-distillation">What are the problems with self-distillation?</h1>
+<div class="date">
+<p>April 4, 2026</p>
+</div>
+<div>
+<blockquote>
+<p><strong>Note</strong></p>
+<blockquote>
+<p>See <span class="citation" data-cites="kim2026does">[1]</span> for a good summary. Also see <span class="citation" data-cites="firth2026supervisionhorizon">[2]</span>, <span class="citation" data-cites="kirkby2026dense">[3]</span>, <span class="citation" data-cites="partridge_opsd_x_post">[4]</span>, <span class="citation" data-cites="song2026survey">[5]</span>.</p>
+</blockquote>
+</blockquote>
+</div>
+<h2 id="the-quiet-failure-mode-of-self-distillation">The Quiet Failure Mode of Self-Distillation</h2>
+<p>Self-distillation — where a model teaches itself by conditioning one copy on privileged information (e.g., ground-truth solutions) and training the other to match — has been a hot post-training paradigm. SDPO, OPSD, and friends show impressive results: shorter responses, higher accuracy, rapid convergence. What’s not to like?</p>
+<p>Turns out, quite a lot — at least in some domains. Kim et al.&nbsp;(2026) [1] systematically document when and why self-distillation <em>degrades</em> reasoning, with performance drops of up to 40% on math benchmarks. And the failure modes go deeper than just accuracy numbers. For a broader survey of on-policy distillation methods and where they sit relative to SFT and RL, see Song &amp; Zheng (2026) [5].</p>
+<h2 id="the-self-distillation-objective">The self-distillation objective</h2>
+<p>In self-distillation, the same model plays both student and teacher under different conditioning contexts. The student generates a sequence <span class="math inline">\(y \sim \pi_\theta(\cdot \mid x)\)</span>. The teacher sees a richer context <span class="math inline">\(c\)</span> (e.g., the ground-truth solution) and produces <span class="math inline">\(\pi_\theta^T(\cdot \mid x, c)\)</span>. Training minimizes the token-level KL divergence:</p>
+<p><span class="math display">\[\mathcal{L}_{\text{SD}}(\theta) = \sum_t \text{KL}\Big[\pi_\theta(\cdot \mid x, y_{&lt;t}) \;\|\; \text{sg}\big[\pi_\theta(\cdot \mid x, c, y_{&lt;t})\big]\Big]\]</span></p>
+<p>This looks clean. But there are at least four structural problems lurking inside.</p>
+<h2 id="problem-1-epistemic-verbalization-suppression">Problem 1: Epistemic verbalization suppression</h2>
+<p>Strong reasoning models (DeepSeek-R1, Qwen3 in thinking mode) pepper their chain-of-thought with uncertainty markers — “Wait,” “Hmm,” “let me check” — that look like noise but actually serve a functional role. These tokens signal that a reasoning path might be flawed, enabling the model to backtrack and explore alternatives. Kim et al.&nbsp;(2026) call this <em>epistemic verbalization</em> and formalize the information-theoretic mechanism behind its suppression.</p>
+<p>They define the informativeness of the teacher’s context as the conditional mutual information:</p>
+<p><span class="math display">\[I(y; c \mid x) = H(y \mid x) - H(y \mid x, c)\]</span></p>
+<p>When <span class="math inline">\(I(y; c \mid x)\)</span> is high — i.e., the teacher context substantially reduces uncertainty about the target — the teacher’s reasoning traces become confident and stripped of epistemic markers. The student learns to imitate this confident style, but at inference time it doesn’t have access to <span class="math inline">\(c\)</span>. It’s been trained to reason as if it knows things it doesn’t.</p>
+<p>The empirical results are stark. On DeepSeek-R1-Distill-Qwen-7B, SDPO with full solution conditioning (<span class="math inline">\(c = s\)</span>) drops AIME24 accuracy by ~40% relative to the base model. Usage of epistemic tokens like “wait” drops by 60.8 counts relative to base, while GRPO <em>increases</em> it by 28.5. The model gets shorter and more confident — and worse.</p>
+<h2 id="problem-2-the-teacher-is-off-policy-for-its-own-generations">Problem 2: The teacher is off-policy for its own generations</h2>
+<p>This is the point Partridge makes in his thread [4] on why OPSD isn’t a silver bullet, and that Firth [2] explores in depth as the <em>supervision horizon</em> problem. The standard self-distillation implementation minimizes token-level KL:</p>
+<p><span class="math display">\[\mathbb{E}_{y \sim \pi_\theta(\cdot \mid x)}\left[\sum_{t=1}^T D_{\text{KL}}\big(\pi_\theta(\cdot \mid y_{&lt;t}, x) \;\|\; \pi_\theta(\cdot \mid y_{&lt;t}, x, c)\big)\right]\]</span></p>
+<p>But this is <em>not</em> the same as minimizing the true sequence-level divergence <span class="math inline">\(D_{\text{KL}}(\pi_\theta(\cdot \mid x) \| \pi_\theta(\cdot \mid x, c))\)</span>. The token-level estimator is on-policy for the student but <em>off-policy for the teacher</em>: the teacher is being force-fed the student’s tokens, which may be wildly inconsistent with what the teacher would have generated. The original SDPO paper (Hübotter et al., 2026) acknowledges this bias in their appendix — the token-level estimator has lower variance than sample-based alternatives but remains biased at the sequence level because it doesn’t account for how <span class="math inline">\(y_t\)</span> influences future states <span class="math inline">\(y_{&gt;t}\)</span>.</p>
+<p>Partridge [4] walks through a concrete failure case. Suppose the student writes “the answer might be 3” when the correct answer is 7. At the token “3”, the teacher receives high loss — good. But <em>after</em> that point, the teacher is stuck in an impossible state: it knows the answer is 7 but finds itself having said 3. The only coherent interpretation available to the teacher is that the “assistant” has adopted an ignorant or confused persona (cf.&nbsp;persona vectors, Anthropic 2025). The supervision signal after the divergence point may be actively harmful — the teacher is essentially teaching the student to play a character that doesn’t know what it’s doing.</p>
+<p><span class="citation" data-cites="AEllisBloor"><strong>AEllisBloor?</strong></span> observed empirical evidence for this: when using gold-standard demonstrations as privileged information, training sometimes collapsed into degenerate outputs. Before final collapse, the student produced outputs like <code>"[normal looking rollout]. This was a demonstration of an example answer"</code> — the teacher was predicting continuation tokens to reconcile the demonstration with the incorrect rollout rather than generating an EOS.</p>
+<p>Firth [2] formalizes this as the <em>supervision horizon</em>: there’s a finite window of tokens over which the teacher’s signal remains useful. Beyond that horizon — as the student’s trajectory diverges further from anything the teacher would produce — the teacher’s predictions become uninformative or adversarial. This connects to the broader DAgger literature on compounding error in imitation learning, but with the twist that here teacher and student share weights, creating feedback dynamics that DAgger’s analysis doesn’t cover.</p>
+<h2 id="problem-3-the-optimal-mixture-distribution-is-unknown">Problem 3: The optimal mixture distribution is unknown</h2>
+<p>Even if you could perfectly minimize <span class="math inline">\(\theta^* = \text{argmin}_\theta \; D_{\text{KL}}(\pi_\theta(\cdot \mid x) \| \pi_\theta(\cdot \mid x, c))\)</span>, it’s not clear this gives you a good policy. There will always be some irreducible divergence between student and teacher — the student simply cannot match the teacher’s distribution without access to <span class="math inline">\(c\)</span>. So the divergence-minimizing policy is not the teacher’s distribution, but some <em>mixture distribution</em>. As Partridge [4] puts it: “we would hope that this mixture distribution is doing something we like, but we have no such guarantees.”</p>
+<p>This is analogous to reward hacking in RL — the fundamental issue is that we don’t know the shape of the optimal policy. OPSD gives you two potential benefits over RL (information density and generalizability), but the generalizability comes at a cost: you expose yourself to “OPSD mush” where the optimal mixture distribution is misaligned with what you’re actually trying to achieve.</p>
+<h2 id="problem-4-task-coverage-determines-whether-suppression-helps-or-hurts">Problem 4: Task coverage determines whether suppression helps or hurts</h2>
+<p>Kim et al.&nbsp;[1] identify two factors that modulate whether self-distillation succeeds:</p>
+<p><strong>Information richness.</strong> The richer the teacher’s conditioning context, the more aggressively epistemic verbalization gets suppressed. Full solution conditioning (<span class="math inline">\(c = s\)</span>) is worse than answer-only (<span class="math inline">\(c = s_{\setminus \text{think}}\)</span>), which is worse than unguided generation.</p>
+<p><strong>Task coverage.</strong> When the training distribution is narrow (few problem types, repeated exposure), suppressing epistemic verbalization is actually fine — the model doesn’t need to hedge on familiar problems. SDPO excels on Chemistry (6 problem types) and LiveCodeBench v6 (131 problems, repeated exposure). But as task diversity grows, suppression becomes catastrophic. OOD problems are precisely the ones where the model <em>needs</em> to express and process uncertainty. On DAPO-Math-17k (diverse math), even the largest dataset sizes show SDPO underperforming the base model on AIME24.</p>
+<h2 id="the-feedback-loop">The feedback loop</h2>
+<p>Things get worse with moving-target teachers (EMA updates). The model produces increasingly confident outputs → the updated teacher becomes even more confident → the next round of training suppresses even more epistemic verbalization. Even slow EMA rates (0.05) amplify this loop relative to a fixed teacher. Kim et al.&nbsp;interpret this as a self-reinforcing cycle: the training objective never penalizes epistemic suppression, so it accumulates silently.</p>
+<h2 id="dense-on-policy-is-necessary-but-not-sufficient">Dense + on-policy is necessary but not sufficient</h2>
+<p>The Baseten team (Kirkby &amp; O’Neill, 2026) [3] provide a complementary perspective. Their experiments on constitutional alignment — using OPSD with a constitution as privileged context, training on BeaverTails safety data, and evaluating on BullshitBench — show that on-policy OPSD transfers principles to unseen domains where off-policy methods and sparse RL do not. Training on safety data alone, OPSD lifts Qwen3-4B to match Gemini 3 Pro on BullshitBench. This is encouraging: dense on-policy supervision <em>does</em> produce representations that generalize.</p>
+<p>But it doesn’t eliminate the structural problems above. The Baseten results are in a regime where task coverage is narrow and the privileged information is a constitution (relatively low <span class="math inline">\(I(y; c \mid x)\)</span> compared to full solutions). The Kim et al.&nbsp;results show that precisely when you scale up task diversity and information richness — i.e., the regime where you’d most want self-distillation to work — the failure modes bite hardest.</p>
+<h2 id="key-takeaway">Key takeaway</h2>
+<p>Correct answers aren’t enough. <em>How</em> a model reasons — whether it maintains the capacity to express and act on uncertainty — matters as much as whether it gets the right answer. Self-distillation can silently strip away this capacity while the training loss looks great. The standard token-level KL objective conflates style transfer with information transfer, and you can’t disentangle the two.</p>
+
+<h1 class="unnumbered" id="bibliography">References</h1>
+<div id="refs" class="references csl-bib-body" data-entry-spacing="0" role="list">
+<div id="ref-kim2026does" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[1] </div><div class="csl-right-inline">J. Kim <em>et al.</em>, <span>“Why does self-distillation (sometimes) degrade the reasoning capability of LLMs?”</span> <em>arXiv preprint arXiv:2603.24472</em>, 2026.</div>
+</div>
+<div id="ref-firth2026supervisionhorizon" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[2] </div><div class="csl-right-inline">M. Firth, <span>“The supervision horizon: An exploration of the mechanics of on-policy self-distillation.”</span> Accessed: Apr. 04, 2026. [Online]. Available: <a href="https://0xlienid.github.io/articles/supervision-horizon-opsd/">https://0xlienid.github.io/articles/supervision-horizon-opsd/</a></div>
+</div>
+<div id="ref-kirkby2026dense" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[3] </div><div class="csl-right-inline">M. Kirkby and C. O’Neill, <span>“Dense, on-policy, or both?”</span> Baseten Research, Mar. 13, 2026. Available: <a href="https://www.baseten.co/research/dense-on-policy-or-both/">https://www.baseten.co/research/dense-on-policy-or-both/</a></div>
+</div>
+<div id="ref-partridge_opsd_x_post" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[4] </div><div class="csl-right-inline">H. Partridge, <span>“OPSD isn’t a silver bullet for continual learning.”</span> Accessed: Apr. 04, 2026. [Online]. Available: <a href="https://x.com/part_harry_/status/2038715548071325794">https://x.com/part_harry_/status/2038715548071325794</a></div>
+</div>
+<div id="ref-song2026survey" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[5] </div><div class="csl-right-inline">M. Song and M. Zheng, <span>“A survey of on-policy distillation for large language models,”</span> <em>arXiv preprint arXiv:2604.00626</em>, 2026, Available: <a href="https://arxiv.org/abs/2604.00626">https://arxiv.org/abs/2604.00626</a></div>
+</div>
+</div>
+
+
+
+
+
+</body></html>

@@ -1,13 +1,22 @@
 # RL Research Notebook
 
+::: {.date}
+Rohan Sikand
+:::
+
+
 This page documents my journey doing reinforcement learning research and a place to gather all my thoughts. In it, I link posts to several things like notes, research ideas, open problems I'm thinking about solving, experimentation logs, results  etc.
 
 We focus specifically on post-training foundation models with RL. 
 
 ## Writeups
 
-- [Desirable Ingredients of a post-training RL algorithm](writeups/ingredients.html) — *April 1 2026*
 - [Open problems in RL post-training](writeups/problems.html) — *March 31 2026*
+- [Desirable Ingredients of a post-training RL algorithm](writeups/ingredients.html) — *April 1 2026*
+- [Why does RL not forget when SFT does?](writeups/rl-forget.html) — *April 4 2026*
+- [Why does Reverse KL encourage mode collapse in RL?](writeups/kl-collapse.html) — *April 4 2026*
+- [What are the problems with self-distillation?](writeups/sd-problems.html) — *April 4 2026*
+- [Why can't RL solve problems not in the base model's support?](writeups/support-leash.html) — *April 4 2026*
 
 
 ## Experiments

@@ -2,6 +2,10 @@ project:
   type: website
   output-dir: _site
 
+bibliography: references.bib
+reference-section-title: References
+csl: https://raw.githubusercontent.com/citation-style-language/styles/master/ieee.csl
+
 format:
   html:
     css: style.css
