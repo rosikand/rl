@@ -17,6 +17,7 @@ We focus specifically on post-training foundation models with RL.
 - [Why does Reverse KL encourage mode collapse in RL?](writeups/kl-collapse.html) — *April 4 2026*
 - [What are the problems with self-distillation?](writeups/sd-problems.html) — *April 4 2026*
 - [Why can't RL solve problems not in the base model's support?](writeups/support-leash.html) — *April 4 2026*
+- [KL-constrained RL](writeups/kl-rl.html) — *April 4 2026*
 
 
 ## Experiments
