@@ -18,6 +18,8 @@ We focus specifically on post-training foundation models with RL.
 - [What are the problems with self-distillation?](writeups/sd-problems.html) — *April 4 2026*
 - [Why can't RL solve problems not in the base model's support?](writeups/support-leash.html) — *April 4 2026*
 - [KL-constrained RL](writeups/kl-rl.html) — *April 4 2026*
+- [Idea: Toward Self-Critic Policy Optimization (SCPO) for RL Post-Training](writeups/scpo.html) — *April 12 2026*
+- [What are Neural Thickets](writeups/thickets.html) — *April 12 2026*
 
 
 ## Experiments

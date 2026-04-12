@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.7.32">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>scpo</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+
+<link rel="stylesheet" href="../style.css">
+</head>
+
+<body>
+
+
+
+
+
+<p><a href="../index.html" class="back">← back</a></p>
+<h1 id="idea-toward-self-critic-policy-optimization-scpo-for-rl-post-training">Idea: Toward Self-Critic Policy Optimization (SCPO) for RL Post-Training</h1>
+<div class="date">
+<p>April 12, 2026</p>
+</div>
+<p>RL post-training for language models has recently converged on a simple and effective pattern: sample rollouts, score them with a verifier, and optimize the policy online. This recipe has worked especially well in domains like math and code, where final answers can be checked automatically. In practice, GRPO-style methods have become a strong default because they avoid the instability and engineering overhead of explicit critics, value functions, and reward models.</p>
+<p>But this simplicity comes with a cost.</p>
+<p>In verifier-based RL, the learning signal is often just a binary outcome: the answer passed or it did not. That signal can be enough to make progress, but it also throws away a huge amount of structure. It ignores intermediate reasoning quality, discards rich environment feedback, and can collapse entirely when all sampled rollouts in a group either succeed or fail. In those cases, there is little or no gradient signal left to learn from.</p>
+<p>At the same time, a new line of work on self-distillation has shown that a policy can often improve itself by taking a second pass with privileged context, such as verifier outcomes or environment feedback. These methods are exciting because they can turn sparse supervision into richer learning signals without requiring an external process reward model. But they also have limitations. Most importantly, they frame the privileged second pass as something the model should imitate.</p>
+<p>That framing may be too restrictive.</p>
+<h2 id="the-core-idea">The core idea</h2>
+<p>My proposal is to use self-distillation as <strong>evaluation</strong>, not <strong>imitation</strong>.</p>
+<p>Instead of asking the policy to mimic a privileged self-teacher, we can ask the privileged pass to produce a better reward-like or critic-like signal for policy optimization. The second pass should not be treated as a target trajectory to copy. It should be treated as a mechanism for scoring, diagnosing, or valuing the original rollout more intelligently than a binary verifier alone can.</p>
+<p>This leads to a simple guiding question:</p>
+<p><strong>How do we turn verifier outcomes and privileged feedback into a robust online reward signal for policy optimization?</strong></p>
+<p>That is the central problem.</p>
+<h2 id="why-the-current-setup-is-unsatisfying">Why the current setup is unsatisfying</h2>
+<p>Verifier-only RL has several obvious weaknesses.</p>
+<p>First, binary rewards are extremely sparse. A full reasoning trace may be nearly correct, yet receive the same reward as a completely nonsensical one. Second, the verifier usually compresses everything down to one bit, which means almost all useful information is discarded. Third, group-relative methods can lose signal entirely when every rollout in a batch gets the same score. And fourth, any rich feedback from the environment, such as compiler errors, failed unit tests, traceback information, or structured hints, is typically ignored.</p>
+<p>Self-distillation methods help with some of this by injecting privileged information into a second pass. But they introduce their own problems.</p>
+<p>A self-teacher can be wrong. Reverse-KL-style imitation can reduce diversity and concentrate the policy on a narrower set of modes. That may suppress exploration and reduce the chance of discovering genuinely new reasoning strategies. More broadly, forcing a student to imitate a teacher is not obviously the right abstraction for reasoning. In many settings, we do not want the model to copy a privileged solution; we want it to think better on its own.</p>
+<p>A useful analogy is a student taking a math exam. After receiving feedback, the student should use that evaluation to improve, not merely memorize a teacher’s answer path. The goal is stronger reasoning, not better imitation.</p>
+<h2 id="what-a-better-method-should-do">What a better method should do</h2>
+<p>An ideal method would satisfy several desiderata.</p>
+<p>It should remain online and adapt as the policy changes, rather than relying on a static reward model that can drift out of sync. It should exploit verifier information and any available environment feedback. It should preserve or even improve diversity rather than collapsing onto a single mode. It should not suppress emergent reasoning. And it should fit naturally into standard RL post-training pipelines for math and code.</p>
+<p>More concretely, I want a method that is:</p>
+<ul>
+<li>online and preferably on-policy</li>
+<li>richer than a binary verifier reward</li>
+<li>compatible with existing RLVR workflows</li>
+<li>resistant to reward hacking and collapse</li>
+<li>capable of supporting long-horizon reasoning</li>
+<li>potentially scalable with additional compute or larger policy models</li>
+</ul>
+<h2 id="a-possible-direction-self-critic-policy-optimization">A possible direction: self-critic policy optimization</h2>
+<p>One natural direction is what I would call <strong>Self-Critic Policy Optimization</strong>.</p>
+<p>The high-level idea is simple. Given a sampled rollout, run a privileged second pass that has access to the verifier outcome and possibly extra environment feedback. But instead of using that pass to generate a target to imitate, use it to estimate a scalar or structured evaluative signal for the original rollout. Then feed that signal back into the policy optimization objective.</p>
+<p>There are several ways this could be instantiated.</p>
+<h3 id="add-a-small-reward-or-value-head-to-the-policy">1. Add a small reward or value head to the policy</h3>
+<p>One option is to attach a lightweight head to the policy backbone. During the privileged pass, this head consumes hidden states from the rollout together with verifier-side context and outputs a better reward estimate. That estimate can then replace or augment the raw binary verifier signal inside a GRPO-style objective.</p>
+<p>This is appealing because it keeps everything tightly coupled and online. The evaluative signal evolves with the policy, which may reduce drift relative to a separate static reward model.</p>
+<h3 id="derive-the-signal-without-adding-new-parameters">2. Derive the signal without adding new parameters</h3>
+<p>Another option is to avoid adding explicit heads at all. The privileged pass could still produce a reward-like or advantage-like signal through some operator over internal states or distributions. For example, one could imagine computing a score from hidden-state geometry, teacher-student divergence, or some learned but parameter-efficient transformation.</p>
+<p>This direction is attractive if the goal is to preserve the simplicity of critic-free RL while still recovering richer supervision.</p>
+<h3 id="use-the-model-itself-as-a-judge-in-the-privileged-pass">3. Use the model itself as a judge in the privileged pass</h3>
+<p>A third possibility is to explicitly prompt the privileged pass to evaluate the rollout and produce a scalar or rubric-style judgment in natural language or structured form. This would treat the self-teacher as an LLM judge, but crucially the output would be used as an evaluative signal for RL, not as a target reasoning trace to imitate.</p>
+<h3 id="learn-a-separate-critic-or-reward-model-online">4. Learn a separate critic or reward model online</h3>
+<p>A more classical alternative is to introduce a distinct critic or reward model, but train it online using rollout data and verifier feedback. This is less elegant, but it may still be the right design if richer evaluation truly requires separate capacity. The important point is that the auxiliary model should evolve with the policy instead of remaining fixed.</p>
+<h2 id="why-this-is-different-from-just-add-a-critic">Why this is different from “just add a critic”</h2>
+<p>The weak version of this idea is simply: attach a value head to GRPO.</p>
+<p>That alone is not very interesting. It imports standard actor-critic machinery into a setting that was explicitly designed to avoid it, without addressing the deeper question of where useful intermediate supervision should come from.</p>
+<p>The stronger version is more specific:</p>
+<ul>
+<li>the privileged second pass has access to verifier outcomes and environment feedback</li>
+<li>the second pass is used to construct a better evaluative signal</li>
+<li>the policy is not trained to imitate the privileged pass</li>
+<li>the goal is to recover the benefits of dense or informed supervision without incurring the usual imitation and mode-collapse issues of self-distillation</li>
+</ul>
+<p>That is a more novel framing. It treats self-distillation as a route to online reward construction rather than trajectory imitation.</p>
+<h2 id="key-research-questions">Key research questions</h2>
+<p>A number of research questions fall out of this framing.</p>
+<p>The first is granularity: what level of supervision is actually best? Full token-level signals may be too constraining, while final outcome-only rewards are too sparse. Perhaps the best answer lies somewhere in between.</p>
+<p>The second is parameterization: should the evaluative mechanism live inside the policy, alongside the policy, or emerge from a parameter-free operator? Each choice has different tradeoffs in stability, expressivity, and engineering cost.</p>
+<p>The third is exploration. If the evaluative signal becomes too sharp, does it reduce diversity and hurt pass@k even as pass@1 improves? Or can it actually improve both by giving the policy more informative gradients?</p>
+<p>The fourth is long-horizon reasoning. Sparse verifier rewards become especially problematic when solving difficult problems over long trajectories. Could a self-critic framework help here by assigning meaningful value to partially successful reasoning before the final answer is known?</p>
+<p>The fifth is robustness. If the privileged pass itself becomes stronger over training, perhaps the resulting evaluative signal improves over time as well. But that also raises the possibility of reward hacking or self-reinforcing errors. Understanding calibration and failure modes will be essential.</p>
+<h2 id="benchmarks-and-domains">Benchmarks and domains</h2>
+<p>This idea is most naturally suited to verifier-rich domains such as math and code. Initial experiments could focus on benchmarks like GSM8K, MBPP or MBPP+, and LiveCodeBench-style settings. These domains offer a useful testbed because they expose both binary outcomes and richer structured feedback, such as failed tests or execution traces.</p>
+<p>Longer term, it would be interesting to ask whether the same framework can be extended beyond fully verifiable domains. There, recent work on learned rewards, inverse RL, and adversarial imitation may become relevant.</p>
+<h2 id="a-broader-perspective">A broader perspective</h2>
+<p>One way to view this project is as an attempt to unify several threads:</p>
+<ul>
+<li>verifier-based RL, which is simple but sparse</li>
+<li>self-distillation, which is rich but often imitation-centric</li>
+<li>reward modeling and critics, which are expressive but can drift or destabilize training</li>
+</ul>
+<p>The hope is to get the best of all three. Use the verifier as ground truth where possible. Use the privileged second pass to extract more information from each rollout. And use that information to shape policy optimization directly, without requiring the policy to copy the teacher’s trajectory.</p>
+<p>If that works, it could offer a cleaner path toward robust online RL for reasoning models: more informative than verifier-only RL, less collapse-prone than imitation-heavy self-distillation, and lighter-weight than maintaining a fully separate reward-modeling stack.</p>
+<h2 id="closing-thought">Closing thought</h2>
+<p>The main conceptual shift here is small but important.</p>
+<p>Self-distillation does not have to mean “generate a better trace and imitate it.” It can also mean “use privileged context to evaluate a trace better.” In verifier-based RL for language models, that distinction may matter a lot.</p>
+<p>What I want is not a better teacher to copy. I want a better signal to optimize.</p>
+
+
+
+
+
+
+</body></html>
