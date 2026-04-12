@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.7.32">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>one-step-rl</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+
+<link rel="stylesheet" href="../style.css">
+</head>
+
+<body>
+
+
+
+
+
+<p><a href="../index.html" class="back">← back</a></p>
+<h1 id="idea-one-step-rlvr-what-if-reinforcement-learning-only-needed-one-gradient-step">Idea: One-Step RLVR: What If Reinforcement Learning Only Needed One Gradient Step?</h1>
+<div class="date">
+<p>April 12, 2026</p>
+</div>
+<p>Note: see research proposal <a href="../images/onesteprl.pdf">slide deck</a></p>
+<ul>
+<li><p>Reinforcement learning with verifiable rewards, or <strong>RLVR</strong>, has become a key ingredient in post-training language models.</p></li>
+<li><p>It works especially well in domains like:</p>
+<ul>
+<li>math</li>
+<li>code</li>
+<li>other settings where outputs can be automatically checked by a verifier</li>
+</ul></li>
+<li><p>But RLVR is expensive.</p></li>
+<li><p>Standard pipelines often require:</p>
+<ul>
+<li>thousands of optimization steps</li>
+<li>repeated rollout generation</li>
+<li>long training runs over large clusters</li>
+</ul></li>
+<li><p>The default assumption is that this long iterative process is necessary.</p></li>
+<li><p>The core question of this proposal is:</p>
+<ul>
+<li><strong>what if it is not?</strong></li>
+</ul></li>
+</ul>
+<h2 id="core-idea">Core idea</h2>
+<ul>
+<li><p><strong>One-Shot RLVR</strong> is based on a simple hypothesis:</p>
+<ul>
+<li>if the update direction is already clear from the base model</li>
+<li>and the target expert solution is nearby in parameter space</li>
+<li>then most of RLVR’s many gradient steps may be unnecessary</li>
+</ul></li>
+<li><p>In that regime, RLVR may not be doing extended search.</p></li>
+<li><p>It may just be:</p>
+<ul>
+<li>finding a direction early</li>
+<li>then repeatedly walking along that same direction</li>
+</ul></li>
+</ul>
+<h2 id="key-observations-motivating-the-idea">Key observations motivating the idea</h2>
+<ul>
+<li><p>Recent work suggests RLVR training is often surprisingly linear.</p></li>
+<li><p>Across algorithms and model sizes:</p>
+<ul>
+<li>weights move roughly along a straight path</li>
+<li>log-probabilities follow a similar trend</li>
+</ul></li>
+<li><p>This suggests the optimization direction may not change much over training.</p></li>
+<li><p>Other work suggests pretrained models are surrounded by many nearby task-expert solutions in parameter space.</p></li>
+<li><p>These solutions appear to be:</p>
+<ul>
+<li>dense</li>
+<li>nearby</li>
+<li>increasingly available at larger scales</li>
+</ul></li>
+<li><p>They are specialists rather than generalists, but they may still be close enough to reach with minimal movement.</p></li>
+<li><p>Put together, these observations suggest:</p>
+<ul>
+<li>the destination may already be close</li>
+<li>the direction may already be available from the start</li>
+</ul></li>
+<li><p>That leads to the main question:</p>
+<ul>
+<li><strong>if the direction does not change and the expert is close, why take 1,000 steps when one may suffice?</strong></li>
+</ul></li>
+</ul>
+<h2 id="the-proposed-shift">The proposed shift</h2>
+<ul>
+<li><p>Standard RLVR allocates compute to <strong>depth</strong>:</p>
+<ul>
+<li>small rollout batches</li>
+<li>many sequential gradient updates</li>
+</ul></li>
+<li><p>One-Shot RLVR allocates compute to <strong>breadth</strong>:</p>
+<ul>
+<li>one very large rollout batch</li>
+<li>one gradient estimate</li>
+<li>one parameter update</li>
+</ul></li>
+<li><p>The idea is to spend compute estimating the <strong>first step extremely well</strong>, rather than repeatedly re-estimating similar steps over time.</p></li>
+</ul>
+<h2 id="method">Method</h2>
+<ul>
+<li>The method has four steps:</li>
+</ul>
+<h3 id="sample-a-massive-rollout-batch-from-the-base-policy">1. Sample a massive rollout batch from the base policy</h3>
+<ul>
+<li><p>Start from the base model</p></li>
+<li><p>Sample a very large number of rollouts</p>
+<ul>
+<li>roughly 10K to 50K trajectories</li>
+</ul></li>
+<li><p>Use relatively high temperature to increase coverage and diversity</p></li>
+</ul>
+<h3 id="score-rollouts-with-a-verifier">2. Score rollouts with a verifier</h3>
+<ul>
+<li><p>Use a binary verifier to label trajectories as correct or incorrect</p></li>
+<li><p>Examples:</p>
+<ul>
+<li>exact answer match for math</li>
+<li>unit tests for code</li>
+<li>any automatic correctness signal in a verifiable environment</li>
+</ul></li>
+</ul>
+<h3 id="compute-one-policy-gradient-step">3. Compute one policy gradient step</h3>
+<ul>
+<li>Use a GRPO-style normalized advantage signal</li>
+<li>Increase probability on better trajectories</li>
+<li>Decrease probability on worse ones</li>
+<li>Compute the gradient only once, at the base parameters</li>
+</ul>
+<h3 id="line-search-over-step-size">4. Line-search over step size</h3>
+<ul>
+<li><p>The update direction may be good, but the correct step size is unknown</p></li>
+<li><p>A step that is too small wastes signal</p></li>
+<li><p>A step that is too large overshoots the useful region</p></li>
+<li><p>So instead of committing to one learning rate:</p>
+<ul>
+<li>evaluate several candidate step sizes</li>
+<li>choose the one that performs best on a held-out validation set</li>
+</ul></li>
+</ul>
+<h2 id="why-this-might-work">Why this might work</h2>
+<ul>
+<li><p>Standard RLVR may be wasting compute re-estimating the same direction over and over</p></li>
+<li><p>If the training trajectory is mostly linear, then later steps are not discovering new behavior</p></li>
+<li><p>They are mostly continuing along the direction already found near the beginning</p></li>
+<li><p>In that view, standard RLVR looks like:</p>
+<ul>
+<li>estimate a noisy direction from a small batch</li>
+<li>take a tiny step</li>
+<li>repeat hundreds or thousands of times</li>
+</ul></li>
+<li><p>One-Shot RLVR instead says:</p>
+<ul>
+<li>estimate the direction once using a huge batch</li>
+<li>take the step immediately</li>
+</ul></li>
+<li><p>So the real tradeoff may be:</p>
+<ul>
+<li><strong>rollout breadth vs.&nbsp;rollout depth</strong></li>
+<li>not simply RL vs.&nbsp;no RL</li>
+</ul></li>
+</ul>
+<h2 id="overshoot-and-stability">Overshoot and stability</h2>
+<ul>
+<li><p>The main risk is overshooting</p></li>
+<li><p>A large update could move the model past the good region and into a worse one</p></li>
+<li><p>That is why line search is central</p></li>
+<li><p>We explicitly evaluate different update magnitudes and choose the best one</p></li>
+<li><p>Another useful free diagnostic is <strong>entropy</strong></p></li>
+<li><p>If entropy collapses sharply as step size increases:</p>
+<ul>
+<li>the update may be too aggressive</li>
+<li>the model may be collapsing into a narrow and degenerate mode</li>
+</ul></li>
+<li><p>The expected pattern is:</p>
+<ul>
+<li>small step: underpowered</li>
+<li>medium step: best performance</li>
+<li>huge step: overshoot</li>
+</ul></li>
+</ul>
+<h2 id="how-to-test-the-hypothesis">How to test the hypothesis</h2>
+<ul>
+<li><p>The cleanest experiment is to compare one-shot training with standard RLVR at fixed rollout budget</p></li>
+<li><p>Example:</p>
+<ul>
+<li><strong>1 step × 50,000 rollouts</strong></li>
+<li>versus</li>
+<li><strong>1,000 steps × 50 rollouts</strong></li>
+</ul></li>
+<li><p>Both use the same total amount of rollout data</p></li>
+<li><p>The only difference is how that compute is allocated</p></li>
+<li><p>If one-shot RLVR matches or approaches the performance of standard RLVR, that would suggest much of the sequential training was unnecessary</p></li>
+</ul>
+<h2 id="useful-diagnostics">Useful diagnostics</h2>
+<h3 id="cosine-similarity-to-a-real-rl-trajectory">Cosine similarity to a real RL trajectory</h3>
+<ul>
+<li>Run normal RLVR for a small number of steps</li>
+<li>Compare the resulting parameter displacement to the one-shot gradient direction</li>
+<li>High cosine similarity would suggest the one-shot step is tracking the same trajectory RL would have followed</li>
+</ul>
+<h3 id="cross-subset-consistency">Cross-subset consistency</h3>
+<ul>
+<li>Split the large rollout batch into multiple subsets</li>
+<li>Compute a gradient on each subset</li>
+<li>If the gradients align well, the estimated direction is stable</li>
+</ul>
+<h3 id="correct-vs.-incorrect-decomposition">Correct vs.&nbsp;incorrect decomposition</h3>
+<ul>
+<li>Compute gradients from correct and incorrect rollouts separately</li>
+<li>These should be roughly anti-parallel</li>
+<li>If they are, that suggests the verifier signal is inducing a coherent update direction</li>
+</ul>
+<h2 id="relation-to-no-rl-alternatives">Relation to no-RL alternatives</h2>
+<ul>
+<li><p>This proposal also connects to methods that skip RL entirely, such as:</p>
+<ul>
+<li>rejection sampling plus SFT</li>
+<li>DPO on correct/incorrect rollout pairs</li>
+<li>direct probes or linear directions extracted from hidden states</li>
+<li>training-free perturbation methods like RandOpt</li>
+</ul></li>
+<li><p>These baselines are useful because they test whether policy gradient machinery is even needed</p></li>
+<li><p>Still, One-Shot RLVR preserves something important:</p>
+<ul>
+<li>it uses verifier-weighted on-policy trajectories directly</li>
+<li>rather than reducing the problem entirely to imitation or preference learning</li>
+</ul></li>
+</ul>
+<h2 id="failure-modes">Failure modes</h2>
+<ul>
+<li><p>The method may fail when the base model pass rate is too low</p></li>
+<li><p>If the large rollout batch contains almost no correct examples:</p>
+<ul>
+<li>there may be too little positive signal</li>
+<li>the one-shot gradient may be weak or noisy</li>
+</ul></li>
+<li><p>Code may be harder than math because rewards are often sparser</p></li>
+<li><p>Very small models may also be poor candidates because:</p>
+<ul>
+<li>nearby expert solutions may be less dense</li>
+<li>the gradient estimate may be less stable</li>
+</ul></li>
+<li><p>Another risk is overfitting to the sampled batch rather than learning a robust generalizable direction</p></li>
+</ul>
+<h2 id="fallback-outcome">Fallback outcome</h2>
+<ul>
+<li><p>Even if exactly one step is too aggressive or too brittle, the idea may still hold in a softened form</p></li>
+<li><p>For example:</p>
+<ul>
+<li>5 to 10 large-batch steps may recover most of the benefit of 1,000 small-batch steps</li>
+</ul></li>
+<li><p>That would still be a meaningful simplification</p></li>
+<li><p>So the main scientific object is not just whether <strong>k = 1</strong> works</p></li>
+<li><p>It is the broader <strong>Pareto frontier between batch size and number of steps</strong></p></li>
+</ul>
+<h2 id="the-broader-claim">The broader claim</h2>
+<ul>
+<li><p>The provocative takeaway is:</p>
+<ul>
+<li><strong>RLVR’s compute may be mostly wasted</strong></li>
+</ul></li>
+<li><p>If:</p>
+<ul>
+<li>pretrained models already sit near dense task-specialist solutions</li>
+<li>RL trajectories are mostly linear</li>
+</ul></li>
+<li><p>then standard RLVR may be solving the wrong optimization problem</p></li>
+<li><p>It may be treating learning as a long sequential search problem</p></li>
+<li><p>when in reality the main challenge is just:</p>
+<ul>
+<li>estimating the right first step</li>
+</ul></li>
+</ul>
+<h2 id="closing">Closing</h2>
+<ul>
+<li><p>The central message of One-Shot RLVR is simple:</p>
+<ul>
+<li>maybe RL post-training does not need long training runs</li>
+<li>maybe it just needs one very good gradient step</li>
+</ul></li>
+</ul>
+
+
+
+
+
+
+</body></html>
