@@ -20,6 +20,7 @@ We focus specifically on post-training foundation models with RL.
 - [KL-constrained RL](writeups/kl-rl.html) — *April 4 2026*
 - [Idea: Toward Self-Critic Policy Optimization (SCPO) for RL Post-Training](writeups/scpo.html) — *April 12 2026*
 - [What are Neural Thickets](writeups/thickets.html) — *April 12 2026*
+- [Idea: One-Step is all you Need (one-step rl)](writeups/one-step-rl.html) — *April 12 2026*
 
 
 ## Experiments
