@@ -6,7 +6,7 @@
 April 12, 2026
 :::
 
-
+Note: see research proposal [slide deck](../images/scpo_slides.pdf)
 
 RL post-training for language models has recently converged on a simple and effective pattern: sample rollouts, score them with a verifier, and optimize the policy online. This recipe has worked especially well in domains like math and code, where final answers can be checked automatically. In practice, GRPO-style methods have become a strong default because they avoid the instability and engineering overhead of explicit critics, value functions, and reward models.
 

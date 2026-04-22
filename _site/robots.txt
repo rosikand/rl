@@ -1,1 +1,0 @@
-Sitemap: https://rosikand.github.io/rl/sitemap.xml

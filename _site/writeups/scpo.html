@@ -40,6 +40,7 @@ ul.task-list li input[type="checkbox"] {
 <div class="date">
 <p>April 12, 2026</p>
 </div>
+<p>Note: see research proposal <a href="../images/scpo_slides.pdf">slide deck</a></p>
 <p>RL post-training for language models has recently converged on a simple and effective pattern: sample rollouts, score them with a verifier, and optimize the policy online. This recipe has worked especially well in domains like math and code, where final answers can be checked automatically. In practice, GRPO-style methods have become a strong default because they avoid the instability and engineering overhead of explicit critics, value functions, and reward models.</p>
 <p>But this simplicity comes with a cost.</p>
 <p>In verifier-based RL, the learning signal is often just a binary outcome: the answer passed or it did not. That signal can be enough to make progress, but it also throws away a huge amount of structure. It ignores intermediate reasoning quality, discards rich environment feedback, and can collapse entirely when all sampled rollouts in a group either succeed or fail. In those cases, there is little or no gradient signal left to learn from.</p>
