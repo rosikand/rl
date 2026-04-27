@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.7.32">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>unsolved-problems</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for citations */
+div.csl-bib-body { }
+div.csl-entry {
+  clear: both;
+  margin-bottom: 0em;
+}
+.hanging-indent div.csl-entry {
+  margin-left:2em;
+  text-indent:-2em;
+}
+div.csl-left-margin {
+  min-width:2em;
+  float:left;
+}
+div.csl-right-inline {
+  margin-left:2em;
+  padding-left:1em;
+}
+div.csl-indent {
+  margin-left: 2em;
+}</style>
+
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+
+<link rel="stylesheet" href="../style.css">
+</head>
+
+<body>
+
+
+
+
+
+<p><a href="../index.html" class="back">← back</a></p>
+<h1 id="problems-not-yet-solved">Problems not yet solved</h1>
+<div class="date">
+<p>April 12, 2026</p>
+</div>
+<p>Having combed through lots of the modern RL post-training literature, I began to sit and wonder… with all of these papers coming out, what are problems that aren’t solved yet? It seems like every week there is a new policy optimization method, claiming to be slightly better than GRPO. But what else is there left to do?</p>
+<p>I personally take the position that reward shaping and reward design is a huge component. Not just how you optimize the policy, but figuring out what to optimize for. How you specify your reward is how you tweek the behavior of your policy. Optimization developments just give you a more efficient way of getting you there.</p>
+<p>With that being said, a couple thoughts:</p>
+<h2 id="continual-learning">Continual learning</h2>
+<p>This is the obvious one and the number of people interested in this problem is not lacking. This problem perhaps represents the greatest real world impact if solved. Agents are being deployed in enterprises, but the environment of each enterprise constantly evolves. So ideally you need to respond to changes in the environment with changes to your policy. And how exactly you do this is what this problem space aims to think about. The naive approach which many seem to be doing is to do periodic updates: gather the new data from the environment and fine-tune your policy. This does work for a lot of cases, but its a hacky solution. Ideally, you want something more principled. Thankfully, the classical RL folks have been studying this paradigm for a long time and mathematically, people call it <em>lifelong learning</em>.</p>
+<h2 id="long-horizon-reward-design">Long-horizon reward design</h2>
+<p>Agents can now think for long periods of time, on the order of days for hard problems. This is a different regime altogether than the types of problems we were trying to solve 2-3 years back. So it begs the question: is standard reward design and policy optimization still efficient in this domain? Thus, research needs to be done on designing rewards and learning signals for long-horizon reasoning, treating the long-horizon aspect as a first class citizen. Perhaps the reward design you’d do in the short-horizon scenarios is less optimal when scaled to a longer horizon.</p>
+<h2 id="true-search-and-exploration">True search and exploration</h2>
+<p>The classical RL guys (the Sutton clan) have been studying search, the explore-exploit paradigm in RL for many decades. But the recent language model folks use RL merely as a sampling tool. That is, they use GRPO/RLVR as a means to better sample from an underlying base model. A happy marriage between the two would be a good step forward. How can we induce more “search”/explore style paradigms in RL post-training of LLM’s?</p>
+<p>In RLVR land today, the core mechanism is sampling + reweighting, not search. GRPO and its variants sample rollouts from the current policy, score them with a verifier, and upweight good ones / downweight bad ones. The Invisible Leash paper <span class="citation" data-cites="wu2025invisible">[1]</span> formalizes this precisely: RLVR is a support-constrained optimizer. It can only move probability mass onto completions the base model already assigns non-negligible probability to. However, there is one caveat worth noting: what RL can do is induce compositional reassembly of subskills the base model already possesses individually but hasn’t composed correctly.</p>
+<h2 id="the-never-ending-experiment-adding-to-the-support-set-of-the-base-model-through-environment-reaction">The never ending experiment: adding to the support set of the base model through environment reaction</h2>
+<p>Right now, language models cannot sample solutions that don’t exist in the base models’ support set. Meaning, RLVR just learns an operation to center mass on the support that contains the solution to the task (i.e., sharpens the distribution) such that the model samples that solution specifically/more frequently. That implies two things: (1) RL is being used an elaborate sampling mechanism and (2) a model fundamentally cannot solve a problem if it cannot sample the solution. Thus, people have been coming up with concepts like mid-training and continued pre-training (CTP) as mechanisms for injecting more solution sets to the support of the model and then hill climbing on some task to sharpen the distribution to enable sampling the solutions. This is fine and works well. But what if there was a way add information to the support set on the fly, during online training? This would theoretically enable models to hill climb on more tasks and potentially avoid the whole mid-training and CTP saga.</p>
+<p>One angle for thinking about this is learning during online environment interaction. The environment can provide external information beyond just a reward. For example, in coding environments, feedback in the form of a stack trace is often provided. In biology and wet lab experiments, data can be gathered from analyzing the result of an experiment. Each unit of information that the environment provides is something that expand the base model support.</p>
+<h2 id="stale-and-off-policy-reasoning">Stale and off-policy reasoning</h2>
+<p>In the real world, you cannot just think about theoretical properties. You also need practicality and as such, lots of engineering effort has been focused on making RL more efficient due to things like compute constraints and budgets.</p>
+<p>How can we develop methods that better scale with stale data and off-policyness? See OAPL for a good example of this.</p>
+<h2 id="robotics-long-horizon-reward-modeling-for-robotic-manipulation">Robotics: long-horizon reward modeling for robotic manipulation</h2>
+<p>Unrelated to post-training LLM’s but a lot of the same problems are now occurring in robotic manipulation land as well. Particularly, as models like VLA’s get larger and larger, their expressiveness increases. This enables them to do longer horizon tasks. In addition, another framing is how can we elicit long horizon behavior out of VLA’s when designing reward signals. SARM is an interesting direction here.</p>
+
+<h1 class="unnumbered" id="bibliography">References</h1>
+<div id="refs" class="references csl-bib-body" data-entry-spacing="0" role="list">
+<div id="ref-wu2025invisible" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[1] </div><div class="csl-right-inline">F. Wu <em>et al.</em>, <span>“The invisible leash: Why rlvr may or may not escape its origin,”</span> <em>arXiv preprint arXiv:2507.14843</em>, 2025.</div>
+</div>
+</div>
+
+
+
+
+
+</body></html>

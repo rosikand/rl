@@ -1,20 +1,28 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://rosikand.github.io/rl/index.html</loc>
-    <lastmod>2026-04-12T10:30:15.044Z</lastmod>
+    <loc>https://rosikand.github.io/rl/CLAUDE.html</loc>
+    <lastmod>2026-04-22T04:23:27.858Z</lastmod>
   </url>
   <url>
-    <loc>https://rosikand.github.io/rl/writeups/rl-forget.html</loc>
-    <lastmod>2026-04-04T09:41:04.864Z</lastmod>
+    <loc>https://rosikand.github.io/rl/experiments/pg.html</loc>
+    <lastmod>2026-04-01T10:23:43.574Z</lastmod>
+  </url>
+  <url>
+    <loc>https://rosikand.github.io/rl/writeups/thickets.html</loc>
+    <lastmod>2026-04-12T10:07:26.655Z</lastmod>
   </url>
   <url>
     <loc>https://rosikand.github.io/rl/writeups/one-step-rl.html</loc>
-    <lastmod>2026-04-12T10:34:06.371Z</lastmod>
+    <lastmod>2026-04-21T08:08:23.612Z</lastmod>
   </url>
   <url>
-    <loc>https://rosikand.github.io/rl/writeups/ingredients.html</loc>
-    <lastmod>2026-04-01T10:23:43.592Z</lastmod>
+    <loc>https://rosikand.github.io/rl/writeups/kl-rl.html</loc>
+    <lastmod>2026-04-04T10:40:50.611Z</lastmod>
+  </url>
+  <url>
+    <loc>https://rosikand.github.io/rl/writeups/kl-collapse.html</loc>
+    <lastmod>2026-04-04T09:02:02.180Z</lastmod>
   </url>
   <url>
     <loc>https://rosikand.github.io/rl/writeups/problems.html</loc>
@@ -25,31 +33,51 @@
     <lastmod>2026-04-04T08:49:18.524Z</lastmod>
   </url>
   <url>
-    <loc>https://rosikand.github.io/rl/writeups/scpo.html</loc>
-    <lastmod>2026-04-12T10:07:29.057Z</lastmod>
-  </url>
-  <url>
     <loc>https://rosikand.github.io/rl/writeups/sd-problems.html</loc>
     <lastmod>2026-04-04T09:33:46.426Z</lastmod>
   </url>
   <url>
+    <loc>https://rosikand.github.io/rl/papers/sdpo.html</loc>
+    <lastmod>2026-04-22T04:32:42.302Z</lastmod>
+  </url>
+  <url>
+    <loc>https://rosikand.github.io/rl/papers/grpo.html</loc>
+    <lastmod>2026-04-22T04:21:46.590Z</lastmod>
+  </url>
+  <url>
+    <loc>https://rosikand.github.io/rl/writeups/scpo.html</loc>
+    <lastmod>2026-04-15T11:45:50.547Z</lastmod>
+  </url>
+  <url>
+    <loc>https://rosikand.github.io/rl/writeups/async-rl.html</loc>
+    <lastmod>2026-04-14T11:17:56.174Z</lastmod>
+  </url>
+  <url>
     <loc>https://rosikand.github.io/rl/writeups/ideas.html</loc>
-    <lastmod>2026-04-04T08:30:47.485Z</lastmod>
+    <lastmod>2026-04-14T11:17:59.204Z</lastmod>
   </url>
   <url>
-    <loc>https://rosikand.github.io/rl/writeups/kl-collapse.html</loc>
-    <lastmod>2026-04-04T09:02:02.180Z</lastmod>
+    <loc>https://rosikand.github.io/rl/writeups/unsolved-problems.html</loc>
+    <lastmod>2026-04-15T11:30:44.540Z</lastmod>
   </url>
   <url>
-    <loc>https://rosikand.github.io/rl/writeups/kl-rl.html</loc>
-    <lastmod>2026-04-04T10:40:50.611Z</lastmod>
+    <loc>https://rosikand.github.io/rl/writeups/ingredients.html</loc>
+    <lastmod>2026-04-01T10:23:43.592Z</lastmod>
   </url>
   <url>
-    <loc>https://rosikand.github.io/rl/writeups/thickets.html</loc>
-    <lastmod>2026-04-12T10:07:26.655Z</lastmod>
+    <loc>https://rosikand.github.io/rl/writeups/cheatsheet.html</loc>
+    <lastmod>2026-04-14T11:17:57.080Z</lastmod>
   </url>
   <url>
-    <loc>https://rosikand.github.io/rl/experiments/pg.html</loc>
-    <lastmod>2026-04-01T10:23:43.574Z</lastmod>
+    <loc>https://rosikand.github.io/rl/writeups/rl-market.html</loc>
+    <lastmod>2026-04-23T02:53:18.151Z</lastmod>
+  </url>
+  <url>
+    <loc>https://rosikand.github.io/rl/writeups/rl-forget.html</loc>
+    <lastmod>2026-04-04T09:41:04.864Z</lastmod>
+  </url>
+  <url>
+    <loc>https://rosikand.github.io/rl/index.html</loc>
+    <lastmod>2026-04-27T05:14:01.330Z</lastmod>
   </url>
 </urlset>
