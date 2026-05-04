@@ -9,6 +9,18 @@ This page documents my journey doing reinforcement learning research and a place
 
 We focus specifically on post-training foundation models with RL. 
 
+*Note: this notebook is meant to be a rough draft of thoughts and experiments... not polished final writeups.* 
+
+Some interests: 
+
+- long-horizon reasoning 
+- online reward learning 
+- self distillation 
+- reward modeling and reward shaping
+- Continual learning 
+- Recursive self-improvement 
+- RL for non-verifiable domains
+
 ## Writeups
 
 - [Open problems in RL post-training](writeups/problems.html) — *March 31 2026*
@@ -26,7 +38,15 @@ We focus specifically on post-training foundation models with RL.
 - [The rl data and fine-tuning market](writeups/rl-market.html) — *April 13 2026*
 - [async rl](writeups/async-rl.html) — *April 14 2026*
 - [RL cheatsheet](writeups/cheatsheet.html) — *April 14 2026*
+<!-- 
 
+## Papers
+
+*Reviews and notes on papers I've read.*
+
+- [DeepSeekMath: Pushing the Limits of Mathematical Reasoning in Open Language Models](papers/grpo.html) — *April 21 2026*
+- [Reinforcement Learning via Self-Distillation](papers/sdpo.html) — *April 21 2026*
+ -->
 
 ## Experiments
 

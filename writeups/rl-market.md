@@ -57,6 +57,12 @@ This have several consequences and implications for what is happening. I denote 
 ...
 
 
+
+### Inference becomes coupled with fine-tuning
+
+In order to have a continious, evolving loop in the real world, fine-tuners need to run their own inference solutions. For example, if a fine-tuned model is deployed in a real agentic system, customers will use it via inference and give the fine-tuners more data to train on. But in order for this loop to become autonomous, you need to 
+
+
 ## Business strategies
 
 

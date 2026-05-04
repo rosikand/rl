@@ -6,13 +6,14 @@ set -e
 REPO_DIR="$(cd "$(dirname "$0")" && pwd)"
 
 # --- Gather inputs ---
-echo "Type: (w)riteup or (e)xperiment?"
+echo "Type: (w)riteup, (e)xperiment, or (p)aper?"
 read -r type_input
 
 case "$type_input" in
   w|writeup)  TYPE="writeup";    DIR="writeups";;
   e|experiment) TYPE="experiment"; DIR="experiments";;
-  *) echo "Invalid type. Use 'w' or 'e'."; exit 1;;
+  p|paper)    TYPE="paper";      DIR="papers";;
+  *) echo "Invalid type. Use 'w', 'e', or 'p'."; exit 1;;
 esac
 
 echo "Title:"
@@ -32,6 +33,37 @@ if [ -f "$FILEPATH" ]; then
 fi
 
 # --- Create the file ---
+if [ "$TYPE" = "paper" ]; then
+cat > "$FILEPATH" << EOF
+[← back](../index.html){.back}
+
+# $TITLE
+
+::: {.date}
+$DATE_DISPLAY
+:::
+
+**Authors:**
+
+**Link:**
+
+## Summary
+
+
+## Key Ideas
+
+
+## Strengths
+
+
+## Weaknesses
+
+
+## Relevance to Our Work
+
+
+EOF
+else
 cat > "$FILEPATH" << EOF
 [← back](../index.html){.back}
 
@@ -43,12 +75,15 @@ $DATE_DISPLAY
 
 
 EOF
+fi
 
 echo "Created $DIR/$FILENAME.md"
 
 # --- Add link to index.md ---
 if [ "$TYPE" = "writeup" ]; then
   SECTION="## Writeups"
+elif [ "$TYPE" = "paper" ]; then
+  SECTION="## Papers"
 else
   SECTION="## Experiments"
 fi

@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.7.32">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>claude</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+
+<link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+
+
+
+
+<h1 id="rl-research-notebook">RL Research Notebook</h1>
+<p>This is a Quarto-based research notebook site about RL post-training for foundation models.</p>
+<h2 id="adding-a-paper-review">Adding a paper review</h2>
+<p>When the user gives you a link to a paper (e.g.&nbsp;an arXiv URL) and asks you to add it:</p>
+<ol type="1">
+<li><p><strong>Fetch the paper</strong> using WebFetch on the URL (for arXiv, use the abstract page, e.g.&nbsp;<code>https://arxiv.org/abs/...</code>).</p></li>
+<li><p><strong>Pick a short filename</strong> based on the paper’s key contribution or method name (e.g.&nbsp;<code>grpo</code>, <code>dapo</code>, <code>reinforce-plus-plus</code>).</p></li>
+<li><p><strong>Run <code>add-paper.sh</code></strong> to scaffold the file and update the index:</p>
+<pre><code>bash add-paper.sh &lt;filename&gt; "&lt;Title of the Paper&gt;"</code></pre></li>
+<li><p><strong>Fill in the review</strong> by editing <code>papers/&lt;filename&gt;.md</code> with:</p>
+<ul>
+<li><strong>Authors</strong> and <strong>Link</strong> fields</li>
+<li><strong>Summary</strong>: 3-5 sentence overview of the paper</li>
+<li><strong>Key Ideas</strong>: bullet points of main contributions/techniques</li>
+<li><strong>Strengths</strong>: what the paper does well</li>
+<li><strong>Weaknesses</strong>: limitations, open questions</li>
+<li><strong>Relevance to Our Work</strong>: how it connects to RL post-training research in this notebook (reference existing writeups where relevant)</li>
+</ul></li>
+<li><p>Write the review from the perspective of an RL post-training researcher. Be opinionated. Connect ideas back to topics covered in the writeups/ directory.</p></li>
+</ol>
+<h2 id="project-structure">Project structure</h2>
+<ul>
+<li><code>index.md</code> — main page with links to all writeups, papers, and experiments</li>
+<li><code>writeups/</code> — research notes, ideas, and explanations</li>
+<li><code>papers/</code> — paper reviews</li>
+<li><code>experiments/</code> — experiment logs</li>
+<li><code>new.sh</code> — interactive script to create new writeups, experiments, or papers</li>
+<li><code>add-paper.sh</code> — non-interactive script to scaffold a paper review and update the index</li>
+</ul>
+
+
+
+
+
+
+</body></html>
