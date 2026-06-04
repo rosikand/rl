@@ -111,7 +111,7 @@ Correct answers aren't enough. *How* a model reasons — whether it maintains th
 
 - Extracting reward/advantage information from the teacher signal only where it is causally helpful. 
 - To automatically learn what parts of the feedback is useful. 
-- Route the priv. info through some other mechanism than distillation, such as features as rewards, or a reward model itself. 
+- Route the priv. info through some other mechanism than distillation, such as features as rewards, rl token or a reward model itself (SDRM). 
 - on self distillation reward models: 
     - so how do you get a reward model? a few thoughts here: 
     - mse regress the implicit log probs ratio between student and teacher
