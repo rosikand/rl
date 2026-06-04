@@ -97,6 +97,8 @@ window.Quarto = {
 </blockquote>
 </blockquote>
 </div>
+<p>preface: - sft: dense, biased - rl: sparse, unbiased - sd: dense, unbiased (what you want)</p>
+<p>but… sd has some problems…</p>
 <h2 id="the-quiet-failure-mode-of-self-distillation">The Quiet Failure Mode of Self-Distillation</h2>
 <p>Self-distillation — where a model teaches itself by conditioning one copy on privileged information (e.g., ground-truth solutions) and training the other to match — has been a hot post-training paradigm. SDPO, OPSD, and friends show impressive results: shorter responses, higher accuracy, rapid convergence. What’s not to like?</p>
 <p>Turns out, quite a lot — at least in some domains. Kim et al.&nbsp;(2026) [1] systematically document when and why self-distillation <em>degrades</em> reasoning, with performance drops of up to 40% on math benchmarks. And the failure modes go deeper than just accuracy numbers. For a broader survey of on-policy distillation methods and where they sit relative to SFT and RL, see Song &amp; Zheng (2026) [5].</p>
@@ -145,7 +147,7 @@ window.Quarto = {
 <li>learns uncessary patterns from teacher</li>
 <li>Token-level signal <code>!=</code> true credit assignment — teacher disagrees on style tokens, wording, formatting, etc., not just reasoning-critical tokens. Standard distillation treats them all similarly.</li>
 <li>Compounding errors earlier on affect later parts of the trajectory</li>
-<li>reward quality degrades with trajectory depth, and later-token instability can propagate backward <span class="citation" data-cites="li2026rethinking"><strong>li2026rethinking?</strong></span></li>
+<li>reward quality degrades with trajectory depth, and later-token instability can propagate backward <span class="citation" data-cites="li2026rethinking">[6]</span></li>
 <li>(Debatable) Off-policyness: the next on-policy batch is sampled from the perturbed student; once the model becomes worse at the tail, future rollouts become longer/weirder earlier, so the teacher is now off-distribution sooner. That makes the “bad zone” creep from suffix toward prefix.</li>
 </ul>
 <h2 id="some-thoughts-on-fixing-problems">Some thoughts on fixing problems</h2>
@@ -153,6 +155,22 @@ window.Quarto = {
 <li>Extracting reward/advantage information from the teacher signal only where it is causally helpful.</li>
 <li>To automatically learn what parts of the feedback is useful.</li>
 <li>Route the priv. info through some other mechanism than distillation, such as features as rewards, rl token or a reward model itself (SDRM).</li>
+<li>on self distillation reward models:
+<ul>
+<li>so how do you get a reward model? a few thoughts here:</li>
+<li>mse regress the implicit log probs ratio between student and teacher</li>
+<li>preference based: dpo style, no extra params “your language model is secretly a reward model”. In this cass, you route the priveliged informatjon via preferneces wbere the privaleged pass is viewed as a positive preference</li>
+<li>add critic head paramterizafion: see a3c from robotics</li>
+<li>rl token (see PI)</li>
+<li>speculative verifiation</li>
+<li>features as reward (see goodfire)</li>
+<li>inverse rl from demonstrations (see raro)</li>
+</ul></li>
+<li>one other thought:
+<ul>
+<li>SGS self play algorithm using the “guide” as inspiratioj but apply it to self distillation. As in, add a “guide”, in addition to the student and teacher modes, to stablize the distillation.</li>
+</ul></li>
+<li>ideally you reach some pareto fromiter between bias and variance tradeoff, which may be solved by using the verifier as a groudn truth update difecfion and use fhe self disfillation as a magnitude weight.</li>
 </ul>
 
 <h1 class="unnumbered" id="bibliography">References</h1>
@@ -171,6 +189,9 @@ window.Quarto = {
 </div>
 <div id="ref-song2026survey" class="csl-entry" role="listitem">
 <div class="csl-left-margin">[5] </div><div class="csl-right-inline">M. Song and M. Zheng, <span>“A survey of on-policy distillation for large language models,”</span> <em>arXiv preprint arXiv:2604.00626</em>, 2026, Available: <a href="https://arxiv.org/abs/2604.00626">https://arxiv.org/abs/2604.00626</a></div>
+</div>
+<div id="ref-li2026rethinking" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[6] </div><div class="csl-right-inline">Y. Li <em>et al.</em>, <span>“Rethinking on-policy distillation of large language models: Phenomenology, mechanism, and recipe,”</span> <em>arXiv preprint arXiv:2604.13016</em>, 2026.</div>
 </div>
 </div>
 
