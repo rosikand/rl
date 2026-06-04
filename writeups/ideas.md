@@ -35,3 +35,24 @@ Value/search methods are good at deciding which partial trajectories are worth e
 The frontier for LLM reasoning is probably thus hybrid: 
 
 > policy generates, verifier scores, value estimates guide partial search, and RL distills successful search back into the policy.
+
+
+## Environment-time/verifier-time compute/modulation 
+
+Lots of work has been done on scaling compute (either at train or test time) but what if we scale compute spent on the environment itself or the verifier/reward model? For example, say we had a reward model. Perhaps do CoT or best-of-N on the reward model pass itself. 
+
+The bigger picture here is whether this can lead to a "reward model scaling law" of some sorts. If we increase the compute spend on the reward model pass or in the environment, does the policy get better as a direct result? 
+
+
+Another angle for environment time compute is to use it as a source of modulation/cirriculum design: for example, if the environment recognizes the policy almost got it right, then it can give less feedback/hints and amplify its difficulty on the next rollout. Somewhat like an auto-cirriculum of sorts. The key here is that this is how a student-tutor pairing works in real life: tutor might offer hints if the student is no where close and might increase problem difficulty if they are. 
+
+An even more interesting angle is whether the policy can play student and tutor itself. And do the environment compute modulation itself. See Bailey 2026 for some inspiration. 
+
+
+
+
+
+
+
+
+
