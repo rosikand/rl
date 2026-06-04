@@ -113,4 +113,5 @@ Correct answers aren't enough. *How* a model reasons — whether it maintains th
     - speculative verifiation 
     - features as reward (see goodfire) 
     - inverse rl from demonstrations (see raro) 
-
+- one other thought: 
+    - SGS self play algorithm using the "guide" as inspiratioj but apply it to self distillation. As in, add a "guide", in addition to the student and teacher modes, to stablize the distillation. 
