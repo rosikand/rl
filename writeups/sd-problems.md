@@ -104,4 +104,13 @@ Correct answers aren't enough. *How* a model reasons — whether it maintains th
 - Extracting reward/advantage information from the teacher signal only where it is causally helpful. 
 - To automatically learn what parts of the feedback is useful. 
 - Route the priv. info through some other mechanism than distillation, such as features as rewards, or a reward model itself. 
+- on self distillation reward models: 
+    - so how do you get a reward model? a few thoughts here: 
+    - mse regress the implicit log probs ratio between student and teacher
+    - preference based: dpo style, no extra params "your language model is secretly a reward model". In this cass, you route the priveliged informatjon via preferneces wbere the privaleged pass is viewed as a positive preference 
+    - add critic head paramterizafion: see a3c from robotics 
+    - rl token (see PI) 
+    - speculative verifiation 
+    - features as reward (see goodfire) 
+    - inverse rl from demonstrations (see raro) 
 
