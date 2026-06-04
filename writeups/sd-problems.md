@@ -11,6 +11,14 @@ April 4, 2026
 :::
 
 
+preface: 
+- sft: dense, biased 
+- rl: sparse, unbiased 
+- sd: dense, unbiased (what you want) 
+
+but... sd has some problems... 
+
+
 
 ## The Quiet Failure Mode of Self-Distillation
 
@@ -115,3 +123,4 @@ Correct answers aren't enough. *How* a model reasons — whether it maintains th
     - inverse rl from demonstrations (see raro) 
 - one other thought: 
     - SGS self play algorithm using the "guide" as inspiratioj but apply it to self distillation. As in, add a "guide", in addition to the student and teacher modes, to stablize the distillation. 
+- ideally you reach some pareto fromiter between bias and variance tradeoff, which may be solved by using the verifier as a groudn truth update difecfion and use fhe self disfillation as a magnitude weight. 
