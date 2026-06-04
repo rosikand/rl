@@ -79,3 +79,29 @@ But it doesn't eliminate the structural problems above. The Baseten results are 
 ## Key takeaway
 
 Correct answers aren't enough. *How* a model reasons — whether it maintains the capacity to express and act on uncertainty — matters as much as whether it gets the right answer. Self-distillation can silently strip away this capacity while the training loss looks great. The standard token-level KL objective conflates style transfer with information transfer, and you can't disentangle the two.
+
+
+## Short list tldr 
+
+
+- Epistemic supression: self-distillation can shorten reasoning and remove “wait / hmm / check” behaviors that help reasoning generalize. @kim2026does 
+- Entropy collapse
+- "imitation" rather than evaluatio
+- priveliged information leakage, not availability at inference time
+- instability between student and teacher distributions
+	- unwanted stylistic KL spikes at certain tokens
+- thinking-pattern incompatibility between the student and teacher 
+- learns uncessary patterns from teacher
+- Token-level signal `!=` true credit assignment — teacher disagrees on style tokens, wording, formatting, etc., not just reasoning-critical tokens. Standard distillation treats them all similarly. 
+- Compounding errors earlier on affect later parts of the trajectory 
+- reward quality degrades with trajectory depth, and later-token instability can propagate backward @li2026rethinking
+- (Debatable) Off-policyness: the next on-policy batch is sampled from the perturbed student; once the model becomes worse at the tail, future rollouts become longer/weirder earlier, so the teacher is now off-distribution sooner. That makes the “bad zone” creep from suffix toward prefix. 
+
+
+
+## Some thoughts on fixing problems 
+
+- Extracting reward/advantage information from the teacher signal only where it is causally helpful. 
+- To automatically learn what parts of the feedback is useful. 
+- Route the priv. info through some other mechanism than distillation, such as features as rewards, or a reward model itself. 
+

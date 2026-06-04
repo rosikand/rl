@@ -131,6 +131,29 @@ window.Quarto = {
 <p>But it doesn’t eliminate the structural problems above. The Baseten results are in a regime where task coverage is narrow and the privileged information is a constitution (relatively low <span class="math inline">\(I(y; c \mid x)\)</span> compared to full solutions). The Kim et al.&nbsp;results show that precisely when you scale up task diversity and information richness — i.e., the regime where you’d most want self-distillation to work — the failure modes bite hardest.</p>
 <h2 id="key-takeaway">Key takeaway</h2>
 <p>Correct answers aren’t enough. <em>How</em> a model reasons — whether it maintains the capacity to express and act on uncertainty — matters as much as whether it gets the right answer. Self-distillation can silently strip away this capacity while the training loss looks great. The standard token-level KL objective conflates style transfer with information transfer, and you can’t disentangle the two.</p>
+<h2 id="short-list-tldr">Short list tldr</h2>
+<ul>
+<li>Epistemic supression: self-distillation can shorten reasoning and remove “wait / hmm / check” behaviors that help reasoning generalize. <span class="citation" data-cites="kim2026does">[1]</span></li>
+<li>Entropy collapse</li>
+<li>“imitation” rather than evaluatio</li>
+<li>priveliged information leakage, not availability at inference time</li>
+<li>instability between student and teacher distributions
+<ul>
+<li>unwanted stylistic KL spikes at certain tokens</li>
+</ul></li>
+<li>thinking-pattern incompatibility between the student and teacher</li>
+<li>learns uncessary patterns from teacher</li>
+<li>Token-level signal <code>!=</code> true credit assignment — teacher disagrees on style tokens, wording, formatting, etc., not just reasoning-critical tokens. Standard distillation treats them all similarly.</li>
+<li>Compounding errors earlier on affect later parts of the trajectory</li>
+<li>reward quality degrades with trajectory depth, and later-token instability can propagate backward <span class="citation" data-cites="li2026rethinking"><strong>li2026rethinking?</strong></span></li>
+<li>(Debatable) Off-policyness: the next on-policy batch is sampled from the perturbed student; once the model becomes worse at the tail, future rollouts become longer/weirder earlier, so the teacher is now off-distribution sooner. That makes the “bad zone” creep from suffix toward prefix.</li>
+</ul>
+<h2 id="some-thoughts-on-fixing-problems">Some thoughts on fixing problems</h2>
+<ul>
+<li>Extracting reward/advantage information from the teacher signal only where it is causally helpful.</li>
+<li>To automatically learn what parts of the feedback is useful.</li>
+<li>Route the priv. info through some other mechanism than distillation, such as features as rewards, or a reward model itself.</li>
+</ul>
 
 <h1 class="unnumbered" id="bibliography">References</h1>
 <div id="refs" class="references csl-bib-body" data-entry-spacing="0" role="list">
